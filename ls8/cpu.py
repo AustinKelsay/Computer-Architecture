@@ -79,9 +79,21 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+
+        if op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
+
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
+        self.pc += 3
+
+
+    def MUL(self, op1=None, op2=None):
+        self.alu("MUL", op1, op2)
+
+    def ADD(self, op1=None, op2=None):
+        self.alu("ADD", op1, op2)
 
     def trace(self):
         """
@@ -108,13 +120,17 @@ class CPU:
         self.running = True
         while self.running:
             instruction = self.ram_read(self.pc)
+            ir1 = self.ram_read(self.pc + 1)
+            ir2 = self.ram_read(self.pc + 2)
             if instruction == 0b00000001: #  HLT
                 self.HLT()
-            elif instruction == 0b10000010: #  LDI
+            elif instruction == 0b10000010:  #  LDI
                 self.LDI()
             elif instruction == 0b01000111: #PRN
                 self.PRN()
+            elif bin(instruction >> 5 & 0b001) == bin(0b1):
+                if bin(instruction & 3) == bin(0b0):
+                    self.alu("ADD", ir1, ir2)
+                elif bin(instruction & 3) == bin(0b10):
+                    self.alu('MUL', ir1, ir2)
                 
-
-
-        
