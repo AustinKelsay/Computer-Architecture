@@ -1,5 +1,4 @@
 """CPU functionality."""
-
 import sys
 
 class CPU:
@@ -7,7 +6,7 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.register = [0] * 8
+        self.reg = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
         self.running = False
@@ -25,12 +24,12 @@ class CPU:
     def LDI(self):
         reg_num = self.ram[self.pc + 1]
         value = self.ram[self.pc + 2]
-        self.register[reg_num] = value
+        self.reg[reg_num] = value
         self.pc += 3
 
     def PRN(self):
         reg_num = self.ram[self.pc + 1]
-        print(self.register[reg_num])
+        print(self.reg[reg_num])
         self.pc += 2
         
 
@@ -39,21 +38,40 @@ class CPU:
 
         address = 0
 
+        if len(sys.argv) != 2:
+            print("no file given to run")
+        try:
+            with open(sys.argv[1], "r") as file:
+                program = file.readlines()
+
+                for instruction in program:
+                    if instruction.startswith("#"):
+                        continue
+                    split_inst = instruction.split(' ')[0]
+                    stripped_inst = split_inst.strip()
+                    if stripped_inst == '':
+                        continue
+                    self.ram[address] = int(stripped_inst, 2)
+                    address += 1
+        except FileNotFoundError:
+            print(f"could not find file {sys.argv[1]}")
+            
+
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -87,6 +105,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+        self.running = True
         while self.running:
             instruction = self.ram_read(self.pc)
             if instruction == 0b00000001: #  HLT
